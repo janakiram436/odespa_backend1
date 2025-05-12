@@ -21,22 +21,25 @@ function makeCustomPayment(invoiceId, amount, customPaymentId, collectedById) {
     }),
   };
 
-  // Making the API request to insert custom payment
-  fetch(`https://api.zenoti.com/v1/invoices/${invoiceId}/payment/custom`, options)
+  // Return the Promise for proper handling
+  return fetch(`https://api.zenoti.com/v1/invoices/${invoiceId}/payment/custom`, options)
     .then(res => res.json())
     .then(res => {
       console.log(res);  // Log the API response to the console
 
       // If the custom payment is successfully created, close the invoice
       if (res.error === null) {
-        //const customPaymentId = 'cd817708-9de6-4152-9845-23c25b9f8e1b';  // Custom payment ID
         const collectedById = 'b41ef1f0-ba77-4df3-ad4a-c74edb3c0252';   // Employee who collected the payment
-        closeInvoice(invoiceId, collectedById); // Close the invoice after payment success
+        return closeInvoice(invoiceId, collectedById); // Return the Promise from closeInvoice
       } else {
         console.error('Error with custom payment:', res);
+        throw new Error('Custom payment failed');
       }
     })
-    .catch(err => console.error('Error:', err));  // Logs any errors
+    .catch(err => {
+      console.error('Error:', err);
+      throw err;
+    });
 }
 
 // Function to close the invoice
@@ -55,11 +58,17 @@ function closeInvoice(invoiceId, closedById) {
     })
   };
 
-  // Send POST request to close the invoice
-  fetch(`https://api.zenoti.com/v1/invoices/${invoiceId}/close`, options)
-    .then(res => res.json())                // Parse response as JSON
-    .then(res => console.log(res))          // Log the response to the console
-    .catch(err => console.error('Error:', err)); // Log any errors
+  // Return the Promise for proper handling
+  return fetch(`https://api.zenoti.com/v1/invoices/${invoiceId}/close`, options)
+    .then(res => res.json())
+    .then(res => {
+      console.log(res);
+      return res;
+    })
+    .catch(err => {
+      console.error('Error:', err);
+      throw err;
+    });
 }
 
 // Success route
@@ -68,21 +77,30 @@ router.post("/success", async (req, res) => {
       // Log PayU response
       console.log(req.body); // Log the response data
 
-      const { status, txnid, amount } = req.body;
+      const { status, txnid, amount,productinfo } = req.body;
 
       if (status === 'success') {
         // Call the function to create the custom payment record in Zenoti
         const customPaymentId = 'cd817708-9de6-4152-9845-23c25b9f8e1b';  // Custom payment ID
         const collectedById = 'b41ef1f0-ba77-4df3-ad4a-c74edb3c0252';   // Employee who collected the payment
 
-        makeCustomPayment(txnid, amount, customPaymentId, collectedById);
+        // Process the payment and invoice closure
+        makeCustomPayment(txnid, 29500, customPaymentId, collectedById)
+          .then(result => {
+            // Redirect with both status and invoice status
+            res.redirect(`http://localhost:3000/?status=${status}&sisinvoiceid=${result.is_invoice_closed}&productinfo=${productinfo}&amount=${amount}`);
+          })
+          .catch(error => {
+            console.error('Error in background processing:', error);
+            //res.redirect(`http://localhost:3000/?status=failure&error_message=${error.message}`);
+          });
+      } else {
+        // If payment wasn't successful, redirect with the status
+        //res.redirect(`http://localhost:3000/?status=${status}&error_message=${error_Message}`);
       }
-
-      // Redirect to the frontend (payment result page)
-      res.redirect(`https://odespa-membership-1.vercel.app/payment-result?status=${status}&txnid=${txnid}&amount=${amount}`);
     } catch (error) {
       console.error(error);
-      //res.redirect("http://localhost:3000/payment-result?status=failure&txnid=error");
+     // res.redirect("http://localhost:3000/?status=failure&error_message=Server Error");
     }
 });
 
@@ -94,11 +112,12 @@ router.post("/failure", async (req, res) => {
       const { status, txnid, error_Message } = req.body;
 
       // Redirect to the frontend failure page
-      res.redirect(`https://odespa-membership-1.vercel.app/payment-result?status=${status}&txnid=${txnid}&error_message=${error_Message}`);
+      res.redirect(`http://localhost:3000/?status=${status}&error_message=${error_Message}`);
     } catch (error) {
       console.error(error);
-      //res.redirect("http://localhost:3000/payment-result?status=failure&txnid=error");
+      res.redirect("http://localhost:3000/?status=failure&error_message=Server Error");
     }
 });
 
 module.exports = router;
+
