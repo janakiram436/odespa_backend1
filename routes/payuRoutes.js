@@ -85,7 +85,7 @@ router.post("/success", async (req, res) => {
         const collectedById = 'b41ef1f0-ba77-4df3-ad4a-c74edb3c0252';   // Employee who collected the payment
 
         // Process the payment and invoice closure
-        makeCustomPayment(txnid, 29500, customPaymentId, collectedById)
+        makeCustomPayment(txnid, amount, customPaymentId, collectedById)
           .then(result => {
             // Redirect with both status and invoice status
             res.redirect(`https://odespa-membership-1.vercel.app/?status=${status}&sisinvoiceid=${result.is_invoice_closed}&productinfo=${productinfo}&amount=${amount}`);
