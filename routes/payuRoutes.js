@@ -88,7 +88,7 @@ router.post("/success", async (req, res) => {
         makeCustomPayment(txnid, amount, customPaymentId, collectedById)
           .then(result => {
             // Redirect with both status and invoice status
-            res.redirect(`https://odespa-membership-v-1.vercel.app/?status=${status}&sisinvoiceid=${result.is_invoice_closed}&productinfo=${productinfo}&amount=${amount}`);
+            res.redirect(`https://spamembershipbooking-ridhira.vercel.app/?status=${status}&sisinvoiceid=${result.is_invoice_closed}&productinfo=${productinfo}&amount=${amount}`);
           })
           .catch(error => {
             console.error('Error in background processing:', error);
@@ -113,7 +113,7 @@ router.post("/failure", async (req, res) => {
 
 
       // Redirect to the frontend failure page
-      res.redirect(`https://odespa-membership-v-1.vercel.app/?status=${status}&error_message=${error_Message}`);
+      res.redirect(`https://spamembershipbooking-ridhira.vercel.app/?status=${status}&error_message=${error_Message}`);
     } catch (error) {
       console.error(error);
       //res.redirect("http://localhost:3000/?status=failure&error_message=Server Error");
