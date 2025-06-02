@@ -1,6 +1,7 @@
 const express = require("express");
 const fetch = require('node-fetch');  // Importing fetch for making external requests
 const router = express.Router();
+require('dotenv').config();  // Add this line to load environment variables
 
 // Function to create custom payment
 function makeCustomPayment(invoiceId, amount, customPaymentId, collectedById) {
@@ -8,7 +9,7 @@ function makeCustomPayment(invoiceId, amount, customPaymentId, collectedById) {
     method: 'POST',
     headers: {
       accept: 'application/json',
-      Authorization: 'apikey 061fb3b3f6974acc828ced31bef595cca3f57e5bc194496785492e2b70362283',
+      Authorization: `apikey ${process.env.ZENOTI_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -29,8 +30,7 @@ function makeCustomPayment(invoiceId, amount, customPaymentId, collectedById) {
 
       // If the custom payment is successfully created, close the invoice
       if (res.error === null) {
-        const collectedById = 'b41ef1f0-ba77-4df3-ad4a-c74edb3c0252';   // Employee who collected the payment
-        return closeInvoice(invoiceId, collectedById); // Return the Promise from closeInvoice
+        return closeInvoice(invoiceId, process.env.COLLECTED_BY_ID); // Return the Promise from closeInvoice
       } else {
         console.error('Error with custom payment:', res);
         throw new Error('Custom payment failed');
@@ -48,7 +48,7 @@ function closeInvoice(invoiceId, closedById) {
     method: 'POST',
     headers: {
       accept: 'application/json',
-      Authorization: 'apikey 061fb3b3f6974acc828ced31bef595cca3f57e5bc194496785492e2b70362283',
+      Authorization: `apikey ${process.env.ZENOTI_API_KEY}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
@@ -77,12 +77,12 @@ router.post("/success", async (req, res) => {
       // Log PayU response
       console.log(req.body); // Log the response data
 
-      const { status, txnid, amount,productinfo } = req.body;
+      const { status, txnid, amount, productinfo } = req.body;
 
       if (status === 'success') {
         // Call the function to create the custom payment record in Zenoti
-        const customPaymentId = 'cd817708-9de6-4152-9845-23c25b9f8e1b';  // Custom payment ID
-        const collectedById = 'b41ef1f0-ba77-4df3-ad4a-c74edb3c0252';   // Employee who collected the payment
+        const customPaymentId = process.env.CUSTOM_PAYMENT_ID;  // Custom payment ID from env
+        const collectedById = process.env.COLLECTED_BY_ID;   // Employee who collected the payment from env
 
         // Process the payment and invoice closure
         makeCustomPayment(txnid, amount, customPaymentId, collectedById)

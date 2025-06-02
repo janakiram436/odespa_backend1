@@ -1,24 +1,21 @@
-# Node.js
+# Node.js dependencies
 node_modules/
 
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 
 # Runtime data
-pids
+pids/
 *.pid
 *.seed
 
-# Dependency directory
-node_modules/
-
 # Build output
-/dist
-/build
+dist/
+build/
 
-# .env files
+# Environment variables
 .env
 .env.test
 
@@ -26,6 +23,6 @@ node_modules/
 .vscode/
 .idea/
 
-# OS files
+# OS-generated files
 .DS_Store
 Thumbs.db
